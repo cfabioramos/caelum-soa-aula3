@@ -1,6 +1,5 @@
 package br.com.caelum.livraria.jaxb;
 
-import java.io.FileOutputStream;
 import java.io.StringWriter;
 
 import javax.xml.bind.JAXBContext;

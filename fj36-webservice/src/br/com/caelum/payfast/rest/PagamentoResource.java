@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.ejb.Singleton;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -16,16 +19,30 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
+import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
+import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
+import org.apache.oltu.oauth2.rs.request.OAuthAccessResourceRequest;
 
 import br.com.caelum.payfast.modelo.Pagamento;
 import br.com.caelum.payfast.modelo.Transacao;
+import br.com.caelum.payfast.oauth2.ProtegidoPorOAuth;
+import br.com.caelum.payfast.oauth2.TokenDao;
 
 @Path("/pagamentos")
 @Singleton
+@ProtegidoPorOAuth
 public class PagamentoResource {
 
 	private Map<Integer, Pagamento> repositorio = new HashMap<>();
 	private Integer idPagamento = 1;
+	
+	@Inject
+	private TokenDao tokenDao;
+	
+	@Inject
+	private HttpServletRequest request;
 	
 	public PagamentoResource(){
 		
@@ -43,9 +60,15 @@ public class PagamentoResource {
 		return repositorio.get(id);
 	}
 	
+	/**
+	 * Depois do exercicio 9.19
+	 * @param id
+	 * @return
+	 */
 	@POST
 	@Consumes({MediaType.APPLICATION_JSON})
 	public Response criarPagamento(Transacao transacao) throws URISyntaxException{
+
 		Pagamento pagamento = new Pagamento();
 		pagamento.setId(idPagamento++);
 		pagamento.setValor(transacao.getValor());
@@ -60,6 +83,46 @@ public class PagamentoResource {
 				.type(MediaType.APPLICATION_JSON_TYPE)
 				.build();
 	}
+	
+	/**
+	 * Antes do exercicio 9.19
+	 * @param id
+	 * @return
+	 */
+//	@POST
+//	@Consumes({MediaType.APPLICATION_JSON})
+//	public Response criarPagamento(Transacao transacao) throws URISyntaxException{
+//		
+//		Response unauthorized = Response.status(Status.UNAUTHORIZED).build();
+//		
+//		try {
+//			OAuthAccessResourceRequest oauthRequest = 
+//					new OAuthAccessResourceRequest(request);
+//			String accessToken = oauthRequest.getAccessToken();
+//			
+//			if(tokenDao.existeAccessToken(accessToken)) {
+//				Pagamento pagamento = new Pagamento();
+//				pagamento.setId(idPagamento++);
+//				pagamento.setValor(transacao.getValor());
+//				pagamento.comStatusCriado();
+//				
+//				repositorio.put(pagamento.getId(), pagamento);
+//				
+//				System.out.println("PAGAMENTO CRIADO " + pagamento);
+//				
+//				return Response.created(new URI("/pagamentos/" + pagamento.getId()))
+//						.entity(pagamento)
+//						.type(MediaType.APPLICATION_JSON_TYPE)
+//						.build();
+//			}
+//			else {
+//				return unauthorized;
+//			}
+//		}
+//		catch(OAuthProblemException | OAuthSystemException e) {
+//			throw new BadRequestException(unauthorized, e);
+//		}
+//	}
 	
 	@PUT
 	@Path("/{id}")

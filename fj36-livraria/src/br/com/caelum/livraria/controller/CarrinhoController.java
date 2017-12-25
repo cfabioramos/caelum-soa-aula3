@@ -14,8 +14,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import br.com.caelum.livraria.modelo.Carrinho;
 import br.com.caelum.livraria.modelo.Formato;
 import br.com.caelum.livraria.modelo.Livro;
-import br.com.caelum.livraria.modelo.Pagamento;
 import br.com.caelum.livraria.modelo.Pedido;
+import br.com.caelum.livraria.rest.oauth2.AccessToken;
 
 @Controller
 @RequestMapping("/carrinho")
@@ -33,6 +33,9 @@ public class CarrinhoController{
 	
 	@PersistenceContext
 	EntityManager manager;
+	
+	@Autowired
+	private AccessToken accessToken;
 	
 	@RequestMapping("/adicionarItem")
 	public String adicionarItemNoCarrinho(@RequestParam("id") Integer idLivro, 
@@ -79,7 +82,9 @@ public class CarrinhoController{
 			return REDIRECT_CARRINHO_LISTAR;
 		}
         // Aqui fica o código de verificação do access token
-        
+        if (!accessToken.isPreenchido()) {
+        	return "redirect:/oauth/code";
+        }
 
 		this.carrinho.criarPagamento(numeroCartao, titularCartao);
 
